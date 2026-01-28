@@ -12,17 +12,41 @@ export const useAuth = () => {
     credentials: AuthCredentials & { fullName: string },
     community: Community
   ) => {
+    console.log('🔵 INTENTANDO REGISTRO REAL EN SUPABASE:', credentials.email);
+    console.log('📋 Comunidad ID:', community.id);
+    console.log('🔑 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      const msg = '❌ ERROR CRÍTICO: FALTA VITE_SUPABASE_URL en .env';
+      console.error(msg);
+      alert(msg);
+      return { success: false, error: msg };
+    }
+
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (authError || !authData.user) {
-        return { success: false, error: authError?.message || 'Sign up failed' };
+      console.log('🔍 Respuesta de signUp:', { authData, authError });
+
+      if (authError) {
+        const errorMsg = `❌ ERROR DE SUPABASE SIGNUP: ${authError.message}`;
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: authError.message };
+      }
+
+      if (!authData.user) {
+        const errorMsg = '❌ ERROR: No se creó usuario en Supabase';
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: errorMsg };
       }
 
       const userId = authData.user.id;
+      console.log('✅ Usuario creado en Supabase. ID:', userId);
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -34,42 +58,84 @@ export const useAuth = () => {
         });
 
       if (profileError) {
-        console.error('Error creating profile:', profileError);
-        return { success: false, error: 'Failed to create user profile' };
+        const errorMsg = `❌ ERROR AL CREAR PERFIL: ${profileError.message}`;
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: errorMsg };
       }
 
+      console.log('✅ ÉXITO COMPLETO. Usuario registrado y perfil creado.');
       return { success: true, userId };
     } catch (err) {
-      console.error('Unexpected error signing up:', err);
-      return { success: false, error: 'An unexpected error occurred' };
+      const errorMsg = `❌ ERROR INESPERADO: ${err instanceof Error ? err.message : String(err)}`;
+      console.error(errorMsg);
+      alert(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
   const signIn = async (credentials: AuthCredentials) => {
+    console.log('🔵 INTENTANDO LOGIN EN SUPABASE:', credentials.email);
+
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      const msg = '❌ ERROR CRÍTICO: FALTA VITE_SUPABASE_URL en .env';
+      console.error(msg);
+      alert(msg);
+      return { success: false, error: msg };
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (error || !data.user) {
-        return { success: false, error: error?.message || 'Sign in failed' };
+      console.log('🔍 Respuesta de signIn:', { data, error });
+
+      if (error) {
+        const errorMsg = `❌ ERROR DE SUPABASE LOGIN: ${error.message}`;
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: error.message };
       }
 
+      if (!data.user) {
+        const errorMsg = '❌ ERROR: No se autenticó el usuario';
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      console.log('✅ LOGIN EXITOSO. Usuario ID:', data.user.id);
       return { success: true, userId: data.user.id };
     } catch (err) {
-      console.error('Unexpected error signing in:', err);
-      return { success: false, error: 'An unexpected error occurred' };
+      const errorMsg = `❌ ERROR INESPERADO: ${err instanceof Error ? err.message : String(err)}`;
+      console.error(errorMsg);
+      alert(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
   const signOut = async () => {
+    console.log('🔵 INTENTANDO LOGOUT EN SUPABASE');
+
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        const errorMsg = `❌ ERROR DE SUPABASE LOGOUT: ${error.message}`;
+        console.error(errorMsg);
+        alert(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      console.log('✅ LOGOUT EXITOSO');
       return { success: true };
     } catch (err) {
-      console.error('Unexpected error signing out:', err);
-      return { success: false, error: 'Failed to sign out' };
+      const errorMsg = `❌ ERROR INESPERADO: ${err instanceof Error ? err.message : String(err)}`;
+      console.error(errorMsg);
+      alert(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
