@@ -43,16 +43,26 @@ const App: React.FC = () => {
   const [code, setCode] = useState('');
   const [community, setCommunity] = useState<Community | null>(null);
 
-
   // Background Image State management
   const [bgImage, setBgImage] = useState(DEFAULT_BG);
 
   // Navigation & Flow State
   const [activeTab, setActiveTab] = useState('home');
   const [showBookingFlow, setShowBookingFlow] = useState(false);
-  
+
   // Specific State for Community Tab Navigation (Deep Linking)
   const [communityView, setCommunityView] = useState<CommunityViewState>('MENU');
+
+  // Safety timeout to prevent infinite loading
+  const [forceShowUI, setForceShowUI] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForceShowUI(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -270,7 +280,7 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
 
-      {authLoading && (
+      {authLoading && !forceShowUI && (
         <div className="absolute inset-0 z-30 flex items-center justify-center">
           <div className="text-center">
             <div className="mb-4 flex justify-center">
