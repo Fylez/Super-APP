@@ -55,10 +55,10 @@ const App: React.FC = () => {
   const [communityView, setCommunityView] = useState<CommunityViewState>('MENU');
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (isAuthenticated && !authLoading) {
       setStep('APP');
     }
-  }, [authLoading, isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   // Handlers
   const handleVerifyCommunity = async (e: React.FormEvent) => {

@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const initializeAuth = async () => {
       try {
@@ -45,6 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        setIsLoading(false);
+      }
+    }, 2000);
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, authSession) => {
@@ -57,11 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setSession(null);
         }
+        setIsLoading(false);
       }
     });
 
     return () => {
       mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
