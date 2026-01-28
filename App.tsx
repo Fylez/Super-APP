@@ -1,120 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Key,
-  Building2,
-  ArrowRight,
-  Lock,
-  Mail,
-  ChevronLeft,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Square,
-  CheckSquare,
-  Loader2,
-  AlertTriangle
+import React, { useState } from 'react';
+import { 
+  Key, 
+  Building2, 
+  ArrowRight, 
+  Lock, 
+  Mail, 
+  ChevronLeft, 
+  CheckCircle2, 
+  Eye, 
+  EyeOff, 
+  Square, 
+  CheckSquare 
 } from 'lucide-react';
 import { Language, AuthStep, Community } from './types';
-import {
-  MOCK_COMMUNITIES,
-  DEFAULT_BG,
-  MOCK_WEATHER,
-  MOCK_NOTICES,
-  MOCK_MATCHES,
-  MOCK_SERVICES
+import { 
+  MOCK_COMMUNITIES, 
+  DEFAULT_BG, 
+  MOCK_USER, 
+  MOCK_WEATHER, 
+  MOCK_NOTICES, 
+  MOCK_MATCHES, 
+  MOCK_SERVICES 
 } from './constants';
 import { Button } from './components/Button';
 import { Input } from './components/Input';
 import { LanguageSelector } from './components/LanguageSelector';
 import { HomeScreen } from './components/HomeScreen';
 import { BookingFlowScreen } from './components/BookingFlowScreen';
+// Import Tab Components to render them inside App or pass props
 import { MyBookingsScreen } from './components/MyBookingsScreen';
 import { CommunityScreen, ViewState as CommunityViewState } from './components/CommunityScreen';
 import { WalletScreen } from './components/WalletScreen';
 import { BottomNav } from './components/BottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from './src/hooks/useAuth';
-import { authService } from './src/services/auth.service';
-import { supabase, initError } from './src/lib/supabase';
-
-console.log('[App] Mounting...');
 
 const App: React.FC = () => {
-  const { user, profile, loading: authLoading } = useAuth();
-
+  // Application State
   const [lang, setLang] = useState<Language>('ES');
   const [step, setStep] = useState<AuthStep>('COMMUNITY_CODE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Community Data State
   const [code, setCode] = useState('');
   const [community, setCommunity] = useState<Community | null>(null);
 
+  // Login Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  // Background Image State management
   const [bgImage, setBgImage] = useState(DEFAULT_BG);
 
+  // Navigation & Flow State
   const [activeTab, setActiveTab] = useState('home');
   const [showBookingFlow, setShowBookingFlow] = useState(false);
-
+  
+  // Specific State for Community Tab Navigation (Deep Linking)
   const [communityView, setCommunityView] = useState<CommunityViewState>('MENU');
 
-  useEffect(() => {
-    if (user && profile && profile.communities) {
-      setCommunity({
-        id: profile.communities.id,
-        name: profile.communities.name,
-        code: profile.communities.code,
-        backgroundImage: profile.communities.background_image,
-      });
-      setBgImage(profile.communities.background_image || DEFAULT_BG);
-      setStep('APP');
-    }
-  }, [user, profile]);
-
+  // Handlers
   const handleVerifyCommunity = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    try {
-      const foundCommunity = await authService.verifyCommunityCode(code);
+    // Simulate API Call delay
+    setTimeout(() => {
+      const foundCommunity = MOCK_COMMUNITIES[code.toLowerCase()];
       if (foundCommunity) {
-        setCommunity({
-          id: foundCommunity.id,
-          name: foundCommunity.name,
-          code: foundCommunity.code,
-          backgroundImage: foundCommunity.background_image,
-        });
-        setBgImage(foundCommunity.background_image || DEFAULT_BG);
+        setCommunity(foundCommunity);
+        setBgImage(foundCommunity.backgroundImage || DEFAULT_BG);
         setStep('LOGIN');
       } else {
         setError(lang === 'ES' ? 'Código de comunidad inválido' : 'Invalid community code');
       }
-    } catch (err: any) {
-      setError(lang === 'ES' ? 'Error al verificar código' : 'Error verifying code');
-      console.error(err);
-    } finally {
       setLoading(false);
-    }
+    }, 800);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-
-    try {
-      await authService.signIn(email, password);
-    } catch (err: any) {
-      setError(lang === 'ES' ? 'Credenciales inválidas' : 'Invalid credentials');
-      console.error(err);
-    } finally {
+    // Simulate login API
+    setTimeout(() => {
       setLoading(false);
-    }
+      setStep('APP');
+    }, 1000);
   };
 
   const handleBack = () => {
@@ -126,18 +100,12 @@ const App: React.FC = () => {
     setPassword('');
     setEmail('');
   };
-
-  const handleLogout = async () => {
-    try {
-      await authService.signOut();
-      setStep('COMMUNITY_CODE');
-      setPassword('');
-      setEmail('');
-      setActiveTab('home');
-      setCommunityView('MENU');
-    } catch (err) {
-      console.error('Error logging out:', err);
-    }
+  
+  const handleLogout = () => {
+    setStep('LOGIN');
+    setPassword('');
+    setActiveTab('home');
+    setCommunityView('MENU');
   };
 
   const handleOpenBooking = () => {
@@ -150,7 +118,7 @@ const App: React.FC = () => {
 
   const handleNavigateToBookings = () => {
     setShowBookingFlow(false);
-    setActiveTab('bookings');
+    setActiveTab('bookings'); // Switch to bookings tab
   };
 
   const handleNavigateToMatchmaking = () => {
@@ -158,6 +126,7 @@ const App: React.FC = () => {
     setCommunityView('MATCHMAKING');
   };
 
+  // Content Dictionaries (Simple i18n)
   const content = {
     ES: {
       tagline: 'Experience Living',
@@ -197,309 +166,301 @@ const App: React.FC = () => {
 
   const t = content[lang];
 
-  if (initError) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full bg-slate-800 rounded-2xl p-8 border border-red-500/30 shadow-xl"
-        >
-          <div className="flex items-center justify-center w-12 h-12 bg-red-500/20 rounded-xl mx-auto mb-4">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
-          </div>
-          <h2 className="text-xl font-bold text-white text-center mb-2">Offline Mode</h2>
-          <p className="text-sm text-slate-300 text-center mb-4">
-            {initError}
-          </p>
-          <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
-            <p className="text-xs font-mono text-slate-400">
-              Check your .env file for:<br />
-              - VITE_SUPABASE_URL<br />
-              - VITE_SUPABASE_ANON_KEY
-            </p>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-colors"
-          >
-            Retry Connection
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-      </div>
-    );
-  }
-
-  if (step === 'APP' && community && profile) {
-    const userForDisplay = {
-      id: profile.id,
-      email: profile.email,
-      name: profile.name,
-      handle: profile.handle || '@user',
-      avatarUrl: profile.avatar_url,
-    };
-
+  // RENDER APP
+  if (step === 'APP' && community) {
     return (
       <>
+        {/* We moved logic from HomeScreen internal rendering to here to allow better state control */}
         <div className="min-h-screen bg-slate-900 text-slate-50 font-sans pb-28 relative overflow-x-hidden">
           <AnimatePresence mode='wait'>
-            {activeTab === 'home' && (
-              <motion.div
-                key="home"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <HomeScreen
-                  user={userForDisplay}
-                  weather={MOCK_WEATHER}
-                  notices={MOCK_NOTICES}
-                  matches={MOCK_MATCHES}
-                  services={MOCK_SERVICES}
-                  onLogout={handleLogout}
-                  onFabClick={handleOpenBooking}
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                  onNavigateToMatchmaking={handleNavigateToMatchmaking}
-                />
-              </motion.div>
-            )}
+             {activeTab === 'home' && (
+               <motion.div 
+                 key="home"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 transition={{ duration: 0.2 }}
+               >
+                 <HomeScreen 
+                    user={MOCK_USER}
+                    weather={MOCK_WEATHER}
+                    notices={MOCK_NOTICES}
+                    matches={MOCK_MATCHES}
+                    services={MOCK_SERVICES}
+                    onLogout={handleLogout}
+                    onFabClick={handleOpenBooking}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    onNavigateToMatchmaking={handleNavigateToMatchmaking}
+                  />
+               </motion.div>
+             )}
 
-            {activeTab === 'bookings' && (
-              <motion.div
-                key="bookings"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <MyBookingsScreen onNavigateToNewBooking={handleOpenBooking} />
-              </motion.div>
-            )}
+             {activeTab === 'bookings' && (
+               <motion.div 
+                 key="bookings"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 transition={{ duration: 0.2 }}
+               >
+                  <MyBookingsScreen onNavigateToNewBooking={handleOpenBooking} />
+               </motion.div>
+             )}
 
-            {activeTab === 'community' && (
-              <motion.div
-                key="community"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CommunityScreen currentView={communityView} onViewChange={setCommunityView} />
-              </motion.div>
-            )}
+             {activeTab === 'community' && (
+               <motion.div 
+                 key="community"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 transition={{ duration: 0.2 }}
+               >
+                  <CommunityScreen currentView={communityView} onViewChange={setCommunityView} />
+               </motion.div>
+             )}
 
-            {activeTab === 'wallet' && (
-              <motion.div
-                key="wallet"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <WalletScreen onLogout={handleLogout} />
-              </motion.div>
-            )}
+             {activeTab === 'wallet' && (
+               <motion.div 
+                 key="wallet"
+                 initial={{ opacity: 0, y: 10 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -10 }}
+                 transition={{ duration: 0.2 }}
+               >
+                  <WalletScreen />
+               </motion.div>
+             )}
           </AnimatePresence>
+
+          <BottomNav 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab}
+            onFabClick={handleOpenBooking}
+          />
         </div>
 
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-        <AnimatePresence>
-          {showBookingFlow && (
-            <BookingFlowScreen
-              onClose={handleCloseBooking}
-              onNavigateToBookings={handleNavigateToBookings}
-            />
-          )}
-        </AnimatePresence>
+        {showBookingFlow && (
+          <BookingFlowScreen 
+            onClose={handleCloseBooking}
+            onNavigateToBookings={handleNavigateToBookings}
+          />
+        )}
       </>
     );
   }
 
+  // RENDER AUTH FLOW
   return (
-    <div
-      className="min-h-screen text-white font-sans overflow-hidden flex items-center justify-center"
-      style={{
-        backgroundImage: `url('${bgImage}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"></div>
-      <div className="relative z-10 w-full max-w-md px-6 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+    <div className="relative min-h-screen w-full bg-slate-900 text-slate-50 overflow-hidden font-sans selection:bg-amber-500/30">
+      
+      {/* Background Layer with Overlay - Updated to use img for responsive cover */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={bgImage} 
+          alt="Background" 
+          className="w-full h-full object-cover transition-all duration-1000 ease-in-out transform scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-900/90" />
+      </div>
+
+      {/* Top Navigation */}
+      <nav className="relative z-20 flex justify-between items-center px-6 py-6 md:px-12">
+        <div className="flex items-center space-x-2">
+           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+             <Key className="w-4 h-4 text-slate-900" />
+           </div>
+           <span className="text-xl font-light tracking-widest uppercase text-white">
+             Access<span className="font-semibold text-amber-500">Key</span>
+           </span>
+        </div>
+        <LanguageSelector current={lang} onChange={setLang} />
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
+        
+        <div className="w-full max-w-md mx-auto transition-all duration-500 ease-in-out">
+          
+          <AnimatePresence mode="wait">
+          {/* STEP 1: COMMUNITY CODE */}
           {step === 'COMMUNITY_CODE' && (
-            <div className="animate-fade-in-up">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center shadow-xl">
-                    <Key className="w-6 h-6 text-slate-900" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-white">AccessKey</h1>
-                    <p className="text-amber-200 text-xs font-semibold">{t.tagline}</p>
-                  </div>
-                </div>
-                <LanguageSelector currentLang={lang} onLangChange={setLang} />
-              </div>
-
-              <div className="bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl">
-                <h2 className="text-3xl font-light text-white mb-2">{t.enterCode}</h2>
-                <p className="text-slate-400 text-sm mb-6">Ingresa el código de tu comunidad para continuar</p>
-
-                <form onSubmit={handleVerifyCommunity} className="space-y-4">
-                  <Input
-                    placeholder="Ej: sierra-blanca"
-                    value={code}
-                    onChange={(e) => {
-                      setCode(e.target.value);
-                      setError(null);
-                    }}
-                    icon={Building2}
-                  />
-
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg text-sm"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={!code || loading}
-                    loading={loading}
-                  >
-                    {loading ? 'Verificando...' : t.access}
-                  </Button>
-                </form>
-
-                <p className="text-center text-slate-400 text-sm mt-6">
-                  {t.noCode}{' '}
-                  <button className="text-amber-400 hover:text-amber-300 font-semibold transition-colors">
-                    {t.requestAccess}
-                  </button>
+            <motion.div 
+              key="code-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8 text-center"
+            >
+              <div className="space-y-2">
+                <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white">
+                  {t.tagline}
+                </h1>
+                <p className="text-slate-400 text-lg font-light">
+                  {lang === 'ES' ? 'Lujo · Exclusividad · Comunidad' : 'Luxury · Exclusivity · Community'}
                 </p>
               </div>
-            </div>
+
+              <div className="glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-xl">
+                <form onSubmit={handleVerifyCommunity} className="space-y-6">
+                  <div className="space-y-4">
+                    <Input 
+                      placeholder={t.enterCode}
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      icon={<Building2 className="w-5 h-5" />}
+                      autoFocus
+                      className="text-center text-lg placeholder:font-light"
+                    />
+                    {error && (
+                      <p className="text-red-400 text-sm flex items-center justify-center animate-pulse">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 mr-2" />
+                        {error}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <Button type="submit" isLoading={loading}>
+                    {t.access} <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </form>
+                
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <p className="text-sm text-slate-400">
+                    {t.noCode} {' '}
+                    <button className="text-amber-500 font-medium hover:text-amber-400 transition-colors hover:underline decoration-amber-500/50 underline-offset-4">
+                      {t.requestAccess}
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           )}
 
+          {/* STEP 2: LOGIN FORM */}
           {step === 'LOGIN' && community && (
-            <div className="animate-fade-in-up">
-              <button
+            <motion.div 
+              key="login-step"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+               <button 
                 onClick={handleBack}
-                className="flex items-center space-x-2 text-slate-300 hover:text-white mb-6 transition-colors group"
+                className="flex items-center text-slate-400 hover:text-white transition-colors text-sm group mb-4"
               >
-                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                <span>{t.back}</span>
+                <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+                {t.back}
               </button>
 
-              <div className="bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl">
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/30">
-                    <CheckCircle2 className="w-8 h-8 text-amber-400" />
+              <div className="glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                {/* Decorative background glow for the card */}
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Premium Monogram Logo */}
+                <div className="text-center mb-8 relative z-10">
+                  <div className="relative mx-auto w-24 h-24 mb-4 group cursor-default">
+                    {/* Rings */}
+                    <div className="absolute inset-0 rounded-full border border-white/10 scale-100 group-hover:scale-110 transition-transform duration-700 ease-out" />
+                    <div className="absolute inset-2 rounded-full border border-amber-500/20 scale-100 group-hover:scale-105 transition-transform duration-500" />
+                    
+                    {/* Center Circle */}
+                    <div className="absolute inset-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-950 shadow-inner flex items-center justify-center border border-white/5">
+                      <span className="font-serif text-4xl text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-600 select-none">
+                        {community.name.charAt(0)}
+                      </span>
+                    </div>
+                    
+                    {/* Badge */}
+                    <div className="absolute bottom-0 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-900">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
                   </div>
-                  <p className="text-amber-200 text-xs font-semibold uppercase tracking-wider">{t.verified}</p>
-                  <h2 className="text-2xl font-bold text-white mt-1">{community.name}</h2>
+
+                  <h2 className="text-2xl font-light text-white mb-1">{community.name}</h2>
+                  <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs tracking-[0.2em] uppercase opacity-60">
+                     <span>{t.verified}</span>
+                  </div>
                 </div>
 
-                <h3 className="text-2xl font-light text-white mb-2">{t.welcomeBack}</h3>
-                <p className="text-slate-400 text-sm mb-6">Inicia sesión con tus credenciales</p>
-
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <Input
-                    type="email"
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <Input 
+                    label="Email"
+                    type="email" 
                     placeholder={t.emailPlaceholder}
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError(null);
-                    }}
-                    icon={Mail}
+                    onChange={(e) => setEmail(e.target.value)}
+                    icon={<Mail className="w-5 h-5" />}
                   />
-
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
+                  
+                  <div className="space-y-3">
+                    <Input 
+                      label={lang === 'ES' ? 'Contraseña' : 'Password'}
+                      type={showPassword ? 'text' : 'password'} 
                       placeholder={t.passPlaceholder}
                       value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setError(null);
-                      }}
-                      icon={Lock}
+                      onChange={(e) => setPassword(e.target.value)}
+                      icon={<Lock className="w-5 h-5" />}
+                      rightIcon={showPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                      onRightIconClick={() => setShowPassword(!showPassword)}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                    
+                    {/* Remember & Forgot Row */}
+                    <div className="flex items-center justify-between text-xs px-1">
+                      <button 
+                        type="button"
+                        onClick={() => setRememberMe(!rememberMe)}
+                        className="flex items-center space-x-2 text-slate-400 hover:text-slate-200 transition-colors group"
+                      >
+                         {rememberMe ? (
+                           <CheckSquare className="w-4 h-4 text-amber-500" />
+                         ) : (
+                           <Square className="w-4 h-4 text-slate-600 group-hover:text-slate-500" />
+                         )}
+                         <span>{t.rememberMe}</span>
+                      </button>
+
+                      <a href="#" className="text-amber-500/80 hover:text-amber-400 transition-colors">
+                        {t.forgotPass}
+                      </a>
+                    </div>
                   </div>
 
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg text-sm"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setRememberMe(!rememberMe)}
-                      className="flex items-center space-x-2 text-slate-300 hover:text-white transition-colors"
-                    >
-                      {rememberMe ? (
-                        <CheckSquare className="w-5 h-5 text-amber-500" />
-                      ) : (
-                        <Square className="w-5 h-5" />
-                      )}
-                      <span className="text-sm">{t.rememberMe}</span>
-                    </button>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={!email || !password || loading}
-                    loading={loading}
-                  >
-                    {loading ? 'Iniciando...' : t.login}
+                  <Button type="submit" isLoading={loading} className="mt-2 shadow-lg shadow-amber-900/20">
+                    {t.login}
                   </Button>
                 </form>
 
-                <p className="text-center text-slate-400 text-sm mt-6">
-                  {t.noAccount}{' '}
-                  <button className="text-amber-400 hover:text-amber-300 font-semibold transition-colors">
-                    {t.createAccount}
-                  </button>
-                </p>
+                <div className="mt-8 pt-6 border-t border-white/5 text-center">
+                  <p className="text-slate-400 text-sm">
+                    {t.noAccount} {' '}
+                    <button className="text-white font-medium hover:text-amber-500 transition-colors underline decoration-slate-600 underline-offset-4 hover:decoration-amber-500">
+                      {t.createAccount}
+                    </button>
+                  </p>
+                </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </motion.div>
-      </div>
+          </AnimatePresence>
+
+        </div>
+      </main>
+
+      {/* Footer / Copyright */}
+      <footer className="relative z-10 w-full py-6 text-center text-xs text-slate-600">
+        <p>&copy; 2024 AccessKey. All rights reserved.</p>
+      </footer>
+
+      {/* Tailwind Custom Animations */}
+      <style>{`
+        .font-serif {
+            font-family: 'Times New Roman', Times, serif; /* Fallback simplified */
+        }
+      `}</style>
     </div>
   );
 };
