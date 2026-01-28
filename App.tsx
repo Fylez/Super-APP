@@ -1,26 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  Key, 
-  Building2, 
-  ArrowRight, 
-  Lock, 
-  Mail, 
-  ChevronLeft, 
-  CheckCircle2, 
-  Eye, 
-  EyeOff, 
-  Square, 
-  CheckSquare 
+import {
+  Key,
+  Building2,
+  ArrowRight,
+  Lock,
+  Mail,
+  ChevronLeft,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Square,
+  CheckSquare
 } from 'lucide-react';
 import { Language, AuthStep, Community } from './types';
-import { 
-  MOCK_COMMUNITIES, 
-  DEFAULT_BG, 
-  MOCK_USER, 
-  MOCK_WEATHER, 
-  MOCK_NOTICES, 
-  MOCK_MATCHES, 
-  MOCK_SERVICES 
+import {
+  DEFAULT_BG,
+  MOCK_USER,
+  MOCK_WEATHER,
+  MOCK_NOTICES,
+  MOCK_MATCHES,
+  MOCK_SERVICES
 } from './constants';
 import { Button } from './components/Button';
 import { Input } from './components/Input';
@@ -33,8 +32,11 @@ import { CommunityScreen, ViewState as CommunityViewState } from './components/C
 import { WalletScreen } from './components/WalletScreen';
 import { BottomNav } from './components/BottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCommunity } from './hooks/useCommunity';
 
 const App: React.FC = () => {
+  const { verifyCommunityCode } = useCommunity();
+
   // Application State
   const [lang, setLang] = useState<Language>('ES');
   const [step, setStep] = useState<AuthStep>('COMMUNITY_CODE');
@@ -67,18 +69,15 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Simulate API Call delay
-    setTimeout(() => {
-      const foundCommunity = MOCK_COMMUNITIES[code.toLowerCase()];
-      if (foundCommunity) {
-        setCommunity(foundCommunity);
-        setBgImage(foundCommunity.backgroundImage || DEFAULT_BG);
-        setStep('LOGIN');
-      } else {
-        setError(lang === 'ES' ? 'Código de comunidad inválido' : 'Invalid community code');
-      }
-      setLoading(false);
-    }, 800);
+    const foundCommunity = await verifyCommunityCode(code);
+    if (foundCommunity) {
+      setCommunity(foundCommunity);
+      setBgImage(foundCommunity.backgroundImage || DEFAULT_BG);
+      setStep('LOGIN');
+    } else {
+      setError(lang === 'ES' ? 'Código de comunidad inválido' : 'Invalid community code');
+    }
+    setLoading(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
