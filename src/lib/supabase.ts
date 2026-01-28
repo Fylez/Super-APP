@@ -3,11 +3,26 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+console.log('[Supabase] URL:', supabaseUrl ? '✓ Configured' : '✗ Missing');
+console.log('[Supabase] ANON_KEY:', supabaseAnonKey ? '✓ Configured' : '✗ Missing');
+
+let supabase: any = null;
+let initError: string | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('[Supabase] Client initialized successfully');
+  } catch (err: any) {
+    initError = err?.message || 'Unknown error initializing Supabase';
+    console.error('[Supabase] Initialization error:', initError);
+  }
+} else {
+  initError = `Missing Supabase credentials: ${!supabaseUrl ? 'URL ' : ''}${!supabaseAnonKey ? 'KEY' : ''}`.trim();
+  console.warn('[Supabase] Offline Mode:', initError);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabase, initError };
 
 export interface Database {
   public: {

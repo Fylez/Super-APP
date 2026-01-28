@@ -1,11 +1,18 @@
 import { supabase } from '../lib/supabase';
 
+const checkSupabase = () => {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized. Check your .env credentials.');
+  }
+};
+
 export const authService = {
   async signUp(email: string, password: string, userData: {
     name: string;
     handle: string;
     community_id: string;
   }) {
+    checkSupabase();
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -31,6 +38,7 @@ export const authService = {
   },
 
   async signIn(email: string, password: string) {
+    checkSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -41,17 +49,20 @@ export const authService = {
   },
 
   async signOut() {
+    checkSupabase();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
 
   async getCurrentUser() {
+    checkSupabase();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) throw error;
     return user;
   },
 
   async getProfile(userId: string) {
+    checkSupabase();
     const { data, error } = await supabase
       .from('profiles')
       .select('*, communities(*)')
@@ -63,6 +74,7 @@ export const authService = {
   },
 
   async verifyCommunityCode(code: string) {
+    checkSupabase();
     const { data, error } = await supabase
       .from('communities')
       .select('*')

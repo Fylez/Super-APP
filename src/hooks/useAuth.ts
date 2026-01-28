@@ -25,34 +25,52 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
+    if (!supabase) {
+      console.warn('[useAuth] Supabase client not available');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          loadProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      }).catch((err) => {
+        console.error('[useAuth] Error getting session:', err);
         setLoading(false);
-      }
-    });
+      });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      (() => {
-        (async () => {
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            await loadProfile(session.user.id);
-          } else {
-            setProfile(null);
-            setLoading(false);
-          }
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        (() => {
+          (async () => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+              await loadProfile(session.user.id);
+            } else {
+              setProfile(null);
+              setLoading(false);
+            }
+          })();
         })();
-      })();
-    });
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription?.unsubscribe();
+    } catch (err) {
+      console.error('[useAuth] Initialization error:', err);
+      setLoading(false);
+    }
   }, []);
 
   const loadProfile = async (userId: string) => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase not available');
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*, communities(*)')
@@ -62,7 +80,7 @@ export const useAuth = () => {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('[useAuth] Error loading profile:', error);
     } finally {
       setLoading(false);
     }

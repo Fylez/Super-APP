@@ -11,7 +11,8 @@ import {
   EyeOff,
   Square,
   CheckSquare,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Language, AuthStep, Community } from './types';
 import {
@@ -34,6 +35,9 @@ import { BottomNav } from './components/BottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './src/hooks/useAuth';
 import { authService } from './src/services/auth.service';
+import { supabase, initError } from './src/lib/supabase';
+
+console.log('[App] Mounting...');
 
 const App: React.FC = () => {
   const { user, profile, loading: authLoading } = useAuth();
@@ -192,6 +196,39 @@ const App: React.FC = () => {
   };
 
   const t = content[lang];
+
+  if (initError) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-slate-800 rounded-2xl p-8 border border-red-500/30 shadow-xl"
+        >
+          <div className="flex items-center justify-center w-12 h-12 bg-red-500/20 rounded-xl mx-auto mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white text-center mb-2">Offline Mode</h2>
+          <p className="text-sm text-slate-300 text-center mb-4">
+            {initError}
+          </p>
+          <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+            <p className="text-xs font-mono text-slate-400">
+              Check your .env file for:<br />
+              - VITE_SUPABASE_URL<br />
+              - VITE_SUPABASE_ANON_KEY
+            </p>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold rounded-lg transition-colors"
+          >
+            Retry Connection
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (authLoading) {
     return (
