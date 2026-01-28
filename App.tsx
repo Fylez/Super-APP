@@ -55,10 +55,10 @@ const App: React.FC = () => {
   const [communityView, setCommunityView] = useState<CommunityViewState>('MENU');
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated) {
       setStep('APP');
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated]);
 
   // Handlers
   const handleVerifyCommunity = async (e: React.FormEvent) => {
@@ -243,12 +243,12 @@ const App: React.FC = () => {
   // RENDER AUTH FLOW
   return (
     <div className="relative min-h-screen w-full bg-slate-900 text-slate-50 overflow-hidden font-sans selection:bg-amber-500/30">
-      
+
       {/* Background Layer with Overlay - Updated to use img for responsive cover */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={bgImage} 
-          alt="Background" 
+        <img
+          src={bgImage}
+          alt="Background"
           className="w-full h-full object-cover transition-all duration-1000 ease-in-out transform scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-900/90" />
@@ -269,6 +269,17 @@ const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
+
+      {authLoading && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="w-12 h-12 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
+            </div>
+            <p className="text-slate-400 text-sm">{lang === 'ES' ? 'Conectando...' : 'Connecting...'}</p>
+          </div>
+        </div>
+      )}
         
         <div className="w-full max-w-md mx-auto transition-all duration-500 ease-in-out">
           
@@ -341,11 +352,6 @@ const App: React.FC = () => {
 
         </div>
       </main>
-
-      {/* Footer / Copyright */}
-      <footer className="relative z-10 w-full py-6 text-center text-xs text-slate-600">
-        <p>&copy; 2024 AccessKey. All rights reserved.</p>
-      </footer>
 
       {/* Tailwind Custom Animations */}
       <style>{`
