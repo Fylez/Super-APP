@@ -1,6 +1,6 @@
 export type Language = 'ES' | 'EN';
 
-export type AuthStep = 'COMMUNITY_CODE' | 'LOGIN' | 'APP';
+export type AuthStep = 'COMMUNITY_CODE' | 'AUTH' | 'APP';
 
 export interface Community {
   id: string;

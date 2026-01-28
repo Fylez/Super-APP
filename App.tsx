@@ -3,14 +3,6 @@ import {
   Key,
   Building2,
   ArrowRight,
-  Lock,
-  Mail,
-  ChevronLeft,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Square,
-  CheckSquare
 } from 'lucide-react';
 import { Language, AuthStep, Community } from './types';
 import {
@@ -31,6 +23,7 @@ import { MyBookingsScreen } from './components/MyBookingsScreen';
 import { CommunityScreen, ViewState as CommunityViewState } from './components/CommunityScreen';
 import { WalletScreen } from './components/WalletScreen';
 import { BottomNav } from './components/BottomNav';
+import { AuthScreen } from './components/AuthScreen';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCommunity } from './hooks/useCommunity';
 
@@ -47,11 +40,6 @@ const App: React.FC = () => {
   const [code, setCode] = useState('');
   const [community, setCommunity] = useState<Community | null>(null);
 
-  // Login Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   // Background Image State management
   const [bgImage, setBgImage] = useState(DEFAULT_BG);
@@ -73,21 +61,15 @@ const App: React.FC = () => {
     if (foundCommunity) {
       setCommunity(foundCommunity);
       setBgImage(foundCommunity.backgroundImage || DEFAULT_BG);
-      setStep('LOGIN');
+      setStep('AUTH');
     } else {
       setError(lang === 'ES' ? 'Código de comunidad inválido' : 'Invalid community code');
     }
     setLoading(false);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    // Simulate login API
-    setTimeout(() => {
-      setLoading(false);
-      setStep('APP');
-    }, 1000);
+  const handleAuthSuccess = () => {
+    setStep('APP');
   };
 
   const handleBack = () => {
@@ -96,15 +78,14 @@ const App: React.FC = () => {
     setCode('');
     setBgImage(DEFAULT_BG);
     setError(null);
-    setPassword('');
-    setEmail('');
   };
   
   const handleLogout = () => {
-    setStep('LOGIN');
-    setPassword('');
+    setStep('COMMUNITY_CODE');
     setActiveTab('home');
     setCommunityView('MENU');
+    setCommunity(null);
+    setCode('');
   };
 
   const handleOpenBooking = () => {
@@ -337,112 +318,14 @@ const App: React.FC = () => {
             </motion.div>
           )}
 
-          {/* STEP 2: LOGIN FORM */}
-          {step === 'LOGIN' && community && (
-            <motion.div 
-              key="login-step"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
-              className="space-y-6"
-            >
-               <button 
-                onClick={handleBack}
-                className="flex items-center text-slate-400 hover:text-white transition-colors text-sm group mb-4"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                {t.back}
-              </button>
-
-              <div className="glass-panel p-8 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                {/* Decorative background glow for the card */}
-                <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                {/* Premium Monogram Logo */}
-                <div className="text-center mb-8 relative z-10">
-                  <div className="relative mx-auto w-24 h-24 mb-4 group cursor-default">
-                    {/* Rings */}
-                    <div className="absolute inset-0 rounded-full border border-white/10 scale-100 group-hover:scale-110 transition-transform duration-700 ease-out" />
-                    <div className="absolute inset-2 rounded-full border border-amber-500/20 scale-100 group-hover:scale-105 transition-transform duration-500" />
-                    
-                    {/* Center Circle */}
-                    <div className="absolute inset-4 rounded-full bg-gradient-to-br from-slate-800 to-slate-950 shadow-inner flex items-center justify-center border border-white/5">
-                      <span className="font-serif text-4xl text-transparent bg-clip-text bg-gradient-to-b from-amber-300 to-amber-600 select-none">
-                        {community.name.charAt(0)}
-                      </span>
-                    </div>
-                    
-                    {/* Badge */}
-                    <div className="absolute bottom-0 right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-900">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-
-                  <h2 className="text-2xl font-light text-white mb-1">{community.name}</h2>
-                  <div className="flex items-center justify-center space-x-2 text-slate-400 text-xs tracking-[0.2em] uppercase opacity-60">
-                     <span>{t.verified}</span>
-                  </div>
-                </div>
-
-                <form onSubmit={handleLogin} className="space-y-5">
-                  <Input 
-                    label="Email"
-                    type="email" 
-                    placeholder={t.emailPlaceholder}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    icon={<Mail className="w-5 h-5" />}
-                  />
-                  
-                  <div className="space-y-3">
-                    <Input 
-                      label={lang === 'ES' ? 'Contraseña' : 'Password'}
-                      type={showPassword ? 'text' : 'password'} 
-                      placeholder={t.passPlaceholder}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      icon={<Lock className="w-5 h-5" />}
-                      rightIcon={showPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
-                      onRightIconClick={() => setShowPassword(!showPassword)}
-                    />
-                    
-                    {/* Remember & Forgot Row */}
-                    <div className="flex items-center justify-between text-xs px-1">
-                      <button 
-                        type="button"
-                        onClick={() => setRememberMe(!rememberMe)}
-                        className="flex items-center space-x-2 text-slate-400 hover:text-slate-200 transition-colors group"
-                      >
-                         {rememberMe ? (
-                           <CheckSquare className="w-4 h-4 text-amber-500" />
-                         ) : (
-                           <Square className="w-4 h-4 text-slate-600 group-hover:text-slate-500" />
-                         )}
-                         <span>{t.rememberMe}</span>
-                      </button>
-
-                      <a href="#" className="text-amber-500/80 hover:text-amber-400 transition-colors">
-                        {t.forgotPass}
-                      </a>
-                    </div>
-                  </div>
-
-                  <Button type="submit" isLoading={loading} className="mt-2 shadow-lg shadow-amber-900/20">
-                    {t.login}
-                  </Button>
-                </form>
-
-                <div className="mt-8 pt-6 border-t border-white/5 text-center">
-                  <p className="text-slate-400 text-sm">
-                    {t.noAccount} {' '}
-                    <button className="text-white font-medium hover:text-amber-500 transition-colors underline decoration-slate-600 underline-offset-4 hover:decoration-amber-500">
-                      {t.createAccount}
-                    </button>
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+          {/* STEP 2: AUTH SCREEN (LOGIN/SIGNUP) */}
+          {step === 'AUTH' && community && (
+            <AuthScreen
+              community={community}
+              lang={lang}
+              onBack={handleBack}
+              onSuccess={handleAuthSuccess}
+            />
           )}
           </AnimatePresence>
 
