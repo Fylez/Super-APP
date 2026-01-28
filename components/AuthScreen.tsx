@@ -12,6 +12,7 @@ import { Language, Community } from '../types';
 import { Button } from './Button';
 import { Input } from './Input';
 import { useAuth } from '../hooks/useAuth';
+import { useAuthContext } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 interface AuthScreenProps {
@@ -30,6 +31,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   onSuccess,
 }) => {
   const { signUp, signIn } = useAuth();
+  const { setSession } = useAuthContext();
   const [mode, setMode] = useState<AuthMode>('LOGIN');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +100,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       );
 
       if (result.success) {
+        setSession({
+          userId: result.userId,
+          email: email,
+        });
         setLoading(false);
         onSuccess();
       } else {
@@ -108,6 +114,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       const result = await signIn({ email, password });
 
       if (result.success) {
+        setSession({
+          userId: result.userId,
+          email: email,
+        });
         setLoading(false);
         onSuccess();
       } else {

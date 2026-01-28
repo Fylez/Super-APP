@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Key,
   Building2,
@@ -26,9 +26,12 @@ import { BottomNav } from './components/BottomNav';
 import { AuthScreen } from './components/AuthScreen';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCommunity } from './hooks/useCommunity';
+import { useAuthContext } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
   const { verifyCommunityCode } = useCommunity();
+  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
 
   // Application State
   const [lang, setLang] = useState<Language>('ES');
@@ -50,6 +53,12 @@ const App: React.FC = () => {
   
   // Specific State for Community Tab Navigation (Deep Linking)
   const [communityView, setCommunityView] = useState<CommunityViewState>('MENU');
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      setStep('APP');
+    }
+  }, [authLoading, isAuthenticated]);
 
   // Handlers
   const handleVerifyCommunity = async (e: React.FormEvent) => {
@@ -80,7 +89,8 @@ const App: React.FC = () => {
     setError(null);
   };
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setStep('COMMUNITY_CODE');
     setActiveTab('home');
     setCommunityView('MENU');
